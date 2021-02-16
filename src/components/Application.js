@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DayList from '../components/DayList';
 import Appointment from '../components/Appointment';
+import axios from 'axios';
 
 import 'components/Application.scss';
 
