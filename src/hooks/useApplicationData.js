@@ -84,9 +84,7 @@ export default function useApplicationData() {
     const webSocket = new WebSocket('ws://localhost:8001');
 
     webSocket.onmessage = (event) => {
-      const type = JSON.parse(event.data).type;
-      const interview = JSON.parse(event.data).interview;
-      const id = JSON.parse(event.data).id;
+      const { type, interview, id } = JSON.parse(event.data);
 
       if (type) {
         const days = updateSpotsByAppts(state);
