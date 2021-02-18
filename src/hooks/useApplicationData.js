@@ -2,7 +2,6 @@ import { useEffect, useReducer } from 'react';
 import axios from 'axios';
 
 export default function useApplicationData() {
-  console.log('rendered');
   const SET_DAY = 'SET_DAY';
   const SET_APPLICATION_DATA = 'SET_APPLICATION_DATA';
   const SET_INTERVIEW = 'SET_INTERVIEW';
@@ -14,10 +13,18 @@ export default function useApplicationData() {
       case SET_APPLICATION_DATA:
         return { ...state, ...action.value };
       case SET_INTERVIEW:
+        if (state.appointments[action.id]) {
+          state.appointments[action.id].interview = action.interview;
+        }
+        const appointments = action.appointments
+          ? { ...action.appointments }
+          : { ...state.appointments };
+
+        console.log(action.days);
         return {
           ...state,
-          appointments: action.appointments,
-          days: action.days,
+          appointments,
+          ...action.days,
         };
       default:
         throw new Error(
@@ -28,16 +35,23 @@ export default function useApplicationData() {
 
   function updateDaySpots(state, id, isAdd) {
     return state.days.map((dayObj) => {
-      const daysMatch = dayObj.name === state.day;
-      const isInterviewNull = state.appointments[id].interview === null;
-
-      if ((daysMatch && isInterviewNull) || (daysMatch && isAdd)) {
+      if (dayObj.appointments.indexOf(id) >= 0) {
         isAdd ? (dayObj.spots += 1) : (dayObj.spots -= 1);
-        return dayObj;
       }
       return dayObj;
     });
   }
+
+  const updateSpotsByAppts = (state) => {
+    return state.days.map((dayObj) => {
+      let spotsFilled = 0;
+      dayObj.appointments.forEach((apptId) => {
+        if (state.appointments[apptId].interview !== null) spotsFilled++;
+      });
+      dayObj.spots = 5 - spotsFilled;
+      return dayObj;
+    });
+  };
 
   const [state, dispatch] = useReducer(reducer, {
     day: 'Monday',
@@ -66,11 +80,33 @@ export default function useApplicationData() {
     });
   }, []);
 
+  useEffect(() => {
+    const webSocket = new WebSocket('ws://localhost:8001');
+
+    webSocket.onmessage = (event) => {
+      const type = JSON.parse(event.data).type;
+      const interview = JSON.parse(event.data).interview;
+      const id = JSON.parse(event.data).id;
+
+      if (type) {
+        const days = updateSpotsByAppts(state);
+        dispatch({
+          type,
+          interview,
+          id,
+          days,
+        });
+      }
+      return () => webSocket.close();
+    };
+  }, [state]);
+
   const bookInterview = (id, interview) => {
     const appointment = {
       ...state.appointments[id],
       interview: { ...interview },
     };
+
     const appointments = {
       ...state.appointments,
       [id]: appointment,
@@ -78,38 +114,28 @@ export default function useApplicationData() {
 
     const days = updateDaySpots(state, id, false);
 
-    return axios.put(`/api/appointments/${id}`, { ...appointment }).then(() => {
+    return axios.put(`/api/appointments/${id}`, { interview }).then(() => {
       dispatch({
-        appointments,
         type: SET_INTERVIEW,
+        appointments,
         days,
+        id,
+        interview,
       });
     });
   };
 
   const cancelInterview = (id) => {
-    const appointment = {
-      ...state.appointments[id],
-      interview: null,
-    };
-    const appointments = {
-      ...state.appointments,
-      [id]: appointment,
-    };
-
     const days = updateDaySpots(state, id, true);
 
-    return axios
-      .delete(`/api/appointments/${id}`, {
-        ...appointment,
-      })
-      .then(() => {
-        dispatch({
-          appointments,
-          type: SET_INTERVIEW,
-          days,
-        });
+    return axios.delete(`/api/appointments/${id}`).then(() => {
+      dispatch({
+        type: SET_INTERVIEW,
+        id,
+        interview: null,
+        days,
       });
+    });
   };
 
   const setDay = (day) => dispatch({ day, type: SET_DAY });
