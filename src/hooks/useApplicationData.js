@@ -9,9 +9,9 @@ export default function useApplicationData() {
   });
 
   useEffect(() => {
-    const daysURL = 'http://localhost:8001/api/days';
-    const apptsURL = 'http://localhost:8001/api/appointments';
-    const interviewersURL = 'http://localhost:8001/api/interviewers';
+    const daysURL = '/api/days';
+    const apptsURL = '/api/appointments';
+    const interviewersURL = '/api/interviewers';
 
     Promise.all([
       axios.get(daysURL),
@@ -36,11 +36,11 @@ export default function useApplicationData() {
       ...state.appointments,
       [id]: appointment,
     };
-    return axios
-      .put(`http://localhost:8001/api/appointments/${id}`, { ...appointment })
-      .then(() => {
-        setState({ ...state, appointments });
-      });
+
+    return axios.put(`/api/appointments/${id}`, { ...appointment }).then(() => {
+      updateSpots({ ...state }, id, false);
+      setState({ ...state, appointments });
+    });
   };
 
   const cancelInterview = (id) => {
@@ -53,12 +53,24 @@ export default function useApplicationData() {
       [id]: appointment,
     };
     return axios
-      .delete(`http://localhost:8001/api/appointments/${id}`, {
+      .delete(`/api/appointments/${id}`, {
         ...appointment,
       })
       .then(() => {
+        updateSpots({ ...state }, id, true);
         setState({ ...state, appointments });
       });
+  };
+
+  const updateSpots = (state, id, isAdd) => {
+    state.days.forEach((dayObj) => {
+      if (
+        dayObj.name === state.day &&
+        state.appointments[id].interview === null
+      ) {
+        isAdd ? (dayObj.spots += 1) : (dayObj.spots -= 1);
+      }
+    });
   };
 
   const setDay = (day) => setState({ ...state, day });
