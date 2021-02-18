@@ -6,6 +6,12 @@ export default function useApplicationData() {
   const SET_APPLICATION_DATA = 'SET_APPLICATION_DATA';
   const SET_INTERVIEW = 'SET_INTERVIEW';
 
+  /**
+   * @desc reducer used by useReducer to update state
+   * @param state object with current state data
+   * @param action which action case to pass the action data to update state
+   * @return Object with updated state
+   */
   const reducer = (state, action) => {
     switch (action.type) {
       case SET_DAY:
@@ -16,15 +22,17 @@ export default function useApplicationData() {
         if (state.appointments[action.id]) {
           state.appointments[action.id].interview = action.interview;
         }
+
         const appointments = action.appointments
           ? { ...action.appointments }
           : { ...state.appointments };
 
-        console.log(action.days);
+        const days = action.days ? [...action.days] : [...state.days];
+
         return {
           ...state,
           appointments,
-          ...action.days,
+          days,
         };
       default:
         throw new Error(
@@ -33,16 +41,24 @@ export default function useApplicationData() {
     }
   };
 
-  function updateDaySpots(state, id, isAdd) {
-    return state.days.map((dayObj) => {
-      if (dayObj.appointments.indexOf(id) >= 0) {
-        isAdd ? (dayObj.spots += 1) : (dayObj.spots -= 1);
-      }
-      return dayObj;
-    });
-  }
+  const [state, dispatch] = useReducer(reducer, {
+    day: 'Monday',
+    days: [],
+    appointments: {},
+  });
 
-  const updateSpotsByAppts = (state) => {
+  /**
+   * @desc update the current day depending on user selection of DayList
+   * @param day string with day name from DayListItem value
+   */
+  const setDay = (day) => dispatch({ day, type: SET_DAY });
+
+  /**
+   * @desc update the amount of spots left for each day
+   * @param state object with current state data
+   * @return Array - updated state.days array to be passed to dispatch
+   */
+  const updateSpots = (state) => {
     return state.days.map((dayObj) => {
       let spotsFilled = 0;
       dayObj.appointments.forEach((apptId) => {
@@ -53,12 +69,9 @@ export default function useApplicationData() {
     });
   };
 
-  const [state, dispatch] = useReducer(reducer, {
-    day: 'Monday',
-    days: [],
-    appointments: {},
-  });
-
+  /**
+   * @desc request api data on page reload
+   */
   useEffect(() => {
     const daysURL = '/api/days';
     const apptsURL = '/api/appointments';
@@ -80,6 +93,9 @@ export default function useApplicationData() {
     });
   }, []);
 
+  /**
+   * @desc use websocket to live update content from other clients
+   */
   useEffect(() => {
     const webSocket = new WebSocket('ws://localhost:8001');
 
@@ -87,7 +103,7 @@ export default function useApplicationData() {
       const { type, interview, id } = JSON.parse(event.data);
 
       if (type) {
-        const days = updateSpotsByAppts(state);
+        const days = updateSpots(state);
         dispatch({
           type,
           interview,
@@ -99,6 +115,12 @@ export default function useApplicationData() {
     };
   }, [state]);
 
+  /**
+   * @desc update the api database when user books or edits an interview
+   * @param id number with the id for interview being updated
+   * @param interview object with the interview data {"student": string, "interviewer": num}
+   * @return Promise - to be used by Appointment componenet to render correct view when request completes
+   */
   const bookInterview = (id, interview) => {
     const appointment = {
       ...state.appointments[id],
@@ -110,33 +132,30 @@ export default function useApplicationData() {
       [id]: appointment,
     };
 
-    const days = updateDaySpots(state, id, false);
-
     return axios.put(`/api/appointments/${id}`, { interview }).then(() => {
       dispatch({
         type: SET_INTERVIEW,
         appointments,
-        days,
         id,
         interview,
       });
     });
   };
 
+  /**
+   * @desc update the api database when user cancels/deletes an interview
+   * @param id number with the id for interview being updated
+   * @return Promise - to be used by Appointment componenet to render correct view when request completes
+   */
   const cancelInterview = (id) => {
-    const days = updateDaySpots(state, id, true);
-
     return axios.delete(`/api/appointments/${id}`).then(() => {
       dispatch({
         type: SET_INTERVIEW,
         id,
         interview: null,
-        days,
       });
     });
   };
-
-  const setDay = (day) => dispatch({ day, type: SET_DAY });
 
   return {
     state,
