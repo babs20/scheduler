@@ -7,6 +7,22 @@ export default function useApplicationData() {
   const SET_INTERVIEW = 'SET_INTERVIEW';
 
   /**
+   * @desc update the amount of spots left for each day
+   * @param state object with current state data
+   * @return Array - updated state.days array to be passed to dispatch
+   */
+  const updateSpots = (state) => {
+    return state.days.map((dayObj) => {
+      let spotsFilled = 0;
+      dayObj.appointments.forEach((apptId) => {
+        if (state.appointments[apptId].interview !== null) spotsFilled++;
+      });
+      dayObj.spots = 5 - spotsFilled;
+      return dayObj;
+    });
+  };
+
+  /**
    * @desc reducer used by useReducer to update state
    * @param state object with current state data
    * @param action which action case to pass the action data to update state
@@ -27,7 +43,7 @@ export default function useApplicationData() {
           ? { ...action.appointments }
           : { ...state.appointments };
 
-        const days = action.days ? [...action.days] : [...state.days];
+        const days = updateSpots({ ...state });
 
         return {
           ...state,
@@ -54,22 +70,6 @@ export default function useApplicationData() {
   const setDay = (day) => dispatch({ day, type: SET_DAY });
 
   /**
-   * @desc update the amount of spots left for each day
-   * @param state object with current state data
-   * @return Array - updated state.days array to be passed to dispatch
-   */
-  const updateSpots = (state) => {
-    return state.days.map((dayObj) => {
-      let spotsFilled = 0;
-      dayObj.appointments.forEach((apptId) => {
-        if (state.appointments[apptId].interview !== null) spotsFilled++;
-      });
-      dayObj.spots = 5 - spotsFilled;
-      return dayObj;
-    });
-  };
-
-  /**
    * @desc request api data on page reload
    */
   useEffect(() => {
@@ -91,29 +91,22 @@ export default function useApplicationData() {
         type: SET_APPLICATION_DATA,
       });
     });
-  }, []);
 
-  /**
-   * @desc use websocket to live update content from other clients
-   */
-  useEffect(() => {
     const webSocket = new WebSocket('ws://localhost:8001');
 
     webSocket.onmessage = (event) => {
       const { type, interview, id } = JSON.parse(event.data);
 
       if (type) {
-        const days = updateSpots(state);
         dispatch({
           type,
           interview,
           id,
-          days,
         });
       }
-      return () => webSocket.close();
     };
-  }, [state]);
+    return () => webSocket.close();
+  }, []);
 
   /**
    * @desc update the api database when user books or edits an interview
