@@ -125,7 +125,7 @@ export default function useApplicationData() {
       [id]: appointment,
     };
 
-    return axios.put(`/api/appointments/${id}`, { interview }).then(() => {
+    return axios.put(`/api/appointments/${id}`, appointment).then(() => {
       dispatch({
         type: SET_INTERVIEW,
         appointments,
