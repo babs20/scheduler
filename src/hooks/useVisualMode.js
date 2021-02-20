@@ -10,16 +10,18 @@ export default function useVisualMode(initial) {
     setHistory((prev) => {
       const buffer = [...prev];
       if (isReplace) buffer.pop();
-      return [...buffer, mode];
+      return [...buffer, newMode];
     });
   };
 
   const back = () => {
     const buffer = [...history];
-    if (buffer.length === 1) return setMode(buffer[0]);
-    buffer.pop();
-    const lastMode = buffer[buffer.length - 1];
-    setMode(lastMode);
+    if (buffer.length > 1) {
+      buffer.pop();
+      const lastMode = buffer[buffer.length - 1];
+      setMode(lastMode);
+      setHistory(buffer);
+    }
   };
 
   return {
