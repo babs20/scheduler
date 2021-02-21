@@ -14,11 +14,13 @@ export default function useApplicationData() {
   const updateSpots = (state) => {
     return state.days.map((dayObj) => {
       let spotsFilled = 0;
-      dayObj.appointments.forEach((apptId) => {
+      let bufferDayObj = { ...dayObj };
+      let apptsPerDay = bufferDayObj.appointments.length;
+      bufferDayObj.appointments.forEach((apptId) => {
         if (state.appointments[apptId].interview !== null) spotsFilled++;
       });
-      dayObj.spots = 5 - spotsFilled;
-      return dayObj;
+      bufferDayObj.spots = apptsPerDay - spotsFilled;
+      return bufferDayObj;
     });
   };
 
@@ -35,18 +37,19 @@ export default function useApplicationData() {
       case SET_APPLICATION_DATA:
         return { ...state, ...action.value };
       case SET_INTERVIEW:
-        if (state.appointments[action.id]) {
-          state.appointments[action.id].interview = action.interview;
+        const buffer = { ...state };
+        if (buffer.appointments[action.id]) {
+          buffer.appointments[action.id].interview = action.interview;
         }
 
         const appointments = action.appointments
           ? { ...action.appointments }
-          : { ...state.appointments };
+          : { ...buffer.appointments };
 
-        const days = updateSpots({ ...state });
+        const days = updateSpots({ ...buffer });
 
         return {
-          ...state,
+          ...buffer,
           appointments,
           days,
         };
