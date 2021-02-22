@@ -24,6 +24,7 @@ export default function Form(props) {
       return;
     }
 
+    setError('');
     onSave(studentName, interviewer);
   }
 
