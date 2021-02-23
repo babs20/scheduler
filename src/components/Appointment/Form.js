@@ -24,6 +24,11 @@ export default function Form(props) {
       return;
     }
 
+    if (interviewer === null) {
+      setError('Interviewer choice cannot be blank');
+      return;
+    }
+
     setError('');
     onSave(studentName, interviewer);
   }

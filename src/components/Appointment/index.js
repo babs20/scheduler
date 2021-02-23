@@ -25,7 +25,6 @@ export default function Appointment(props) {
 
   const { mode, transition, back } = useVisualMode(
     props.interview ? SHOW : EMPTY
-    // props.interview && mode === EMPTY ? SHOW : EMPTY
   );
 
   useEffect(() => {
