@@ -23,6 +23,12 @@ Built using Node.js, as well as:
 - Storybook
 - Cypress
 
+## Hosting
+
+You can visit the website [here](https://dazzling-ritchie-ab5cb3.netlify.app/)
+
+\* _Since this is hosted using a free version of Heroku Postgres the database goes to sleep after 30 mins of inactivity. If the app does not load immediatley give the Heroku server a chance to wake up._
+
 ## Setup
 
 Install dependencies with `npm install`.
