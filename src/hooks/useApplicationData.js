@@ -43,7 +43,7 @@ export default function useApplicationData() {
       });
     });
 
-    const webSocket = new WebSocket('ws://localhost:8001');
+    const webSocket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL);
 
     webSocket.onmessage = (event) => {
       const { type, interview, id } = JSON.parse(event.data);
