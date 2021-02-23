@@ -34,22 +34,22 @@ export default function reducer(state, action) {
     case SET_APPLICATION_DATA:
       return { ...state, ...action.value };
     case SET_INTERVIEW:
-      const buffer = { ...state };
-      if (buffer.appointments[action.id]) {
-        buffer.appointments[action.id].interview = action.interview;
-      }
-
-      const appointments = action.appointments
-        ? { ...action.appointments }
-        : { ...buffer.appointments };
-
-      const days = updateSpots({ ...buffer });
+      const buffer = {
+        ...state,
+        appointments: {
+          ...state.appointments,
+          [action.id]: {
+            ...state.appointments[action.id],
+            interview: action.interview,
+          },
+        },
+      };
 
       return {
         ...buffer,
-        appointments,
-        days,
+        days: updateSpots(buffer),
       };
+
     default:
       throw new Error(
         `Tried to reduce with unsupported action type: ${action.type}`

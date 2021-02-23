@@ -63,7 +63,7 @@ describe('Application', () => {
 
     fireEvent.click(queryByAltText(appointment, 'Delete'));
 
-    expect(getByText(appointment, /Confirm Deletion?/i)).toBeInTheDocument();
+    expect(getByText(appointment, 'Confirm Deletion?')).toBeInTheDocument();
 
     fireEvent.click(queryByText(appointment, 'Confirm'));
 
@@ -74,17 +74,17 @@ describe('Application', () => {
     const monday = getAllByTestId(container, 'day').find(
       (day) => queryByText(day, 'Monday') //doesnt return null so satisfies test
     );
-    expect(getByText(monday, /1 spot remaining/i)).toBeInTheDocument();
+    expect(getByText(monday, /2 spots remaining/i)).toBeInTheDocument(); //SUPPOSED TO BE 2
   });
 
   it('loads data, edits an interview and keeps the spots remaining for Monday the same', async () => {
     const { container } = render(<Application />);
-    await waitForElement(() => getByText(container, 'Lydia Miller-Jones'));
+    await waitForElement(() => getByText(container, 'Archie Cohen'));
 
     const appointment = getAllByTestId(
       container,
       'appointment'
-    ).find((appointment) => queryByText(appointment, 'Lydia Miller-Jones'));
+    ).find((appointment) => queryByText(appointment, 'Archie Cohen'));
 
     fireEvent.click(queryByAltText(appointment, 'Edit'));
 
@@ -108,9 +108,9 @@ describe('Application', () => {
   it('shows the save error when failing to save an appointment', async () => {
     const { container } = render(<Application />);
     axios.put.mockRejectedValueOnce();
-    await waitForElement(() => getByText(container, 'Brady Blair'));
+    await waitForElement(() => getByText(container, 'Archie Cohen'));
 
-    const appointment = getAllByTestId(container, 'appointment')[1];
+    const appointment = getAllByTestId(container, 'appointment')[0];
     fireEvent.click(getByAltText(appointment, 'Add'));
 
     fireEvent.change(getByPlaceholderText(appointment, /enter student name/i), {
@@ -128,12 +128,11 @@ describe('Application', () => {
   it('shows the delete error when failing to delete an appointment', async () => {
     const { container } = render(<Application />);
     axios.delete.mockRejectedValueOnce();
-    await waitForElement(() => getByText(container, 'Brady Blair'));
-
+    await waitForElement(() => getByText(container, 'Archie Cohen'));
     const appointment = getAllByTestId(
       container,
       'appointment'
-    ).find((appointment) => queryByText(appointment, 'Brady Blair'));
+    ).find((appointment) => queryByText(appointment, 'Archie Cohen'));
 
     fireEvent.click(queryByAltText(appointment, 'Delete'));
 
