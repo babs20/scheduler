@@ -1,5 +1,7 @@
 # Interview Scheduler
 
+[VISIT THE SITE HERE](https://scheduler-babs.netlify.app/)
+
 ## About
 
 Scheduler is a SPA (Single-Page Application) used to schedule up-to-date, and organized appointments for organizations.
