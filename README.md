@@ -1,6 +1,7 @@
 # Interview Scheduler
 
 [VISIT THE SITE HERE](https://scheduler-babs.netlify.app/)
+\* _Since this is hosted using a free version of Heroku Postgres the database goes to sleep after 30 mins of inactivity. If the app does not load immediatley give the Heroku server a chance to wake up._
 
 ## About
 
